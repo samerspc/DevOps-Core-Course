@@ -118,6 +118,51 @@ http GET http://localhost:5000/
 http GET http://localhost:5000/health
 ```
 
+## Docker
+
+The application is containerized using Docker and published to Docker Hub.
+
+### Building the Image Locally
+
+Build the Docker image from the Dockerfile:
+
+```bash
+docker build -t devops-info-service:latest .
+```
+
+### Running a Container
+
+Run the containerized application with port mapping:
+
+```bash
+docker run -d -p 5000:5000 --name devops-app devops-info-service:latest
+```
+
+Access the application at `http://localhost:5000`
+
+### Pulling from Docker Hub
+
+Pull the pre-built image from Docker Hub:
+
+```bash
+docker pull samerdockerhup/devops-info-service:latest
+docker run -d -p 5000:5000 --name devops-app samerdockerhup/devops-info-service:latest
+```
+
+**Docker Hub Repository:** https://hub.docker.com/r/samerdockerhup/devops-info-service
+
+### Container Configuration
+
+You can override environment variables when running the container:
+
+```bash
+# Custom port
+docker run -d -p 8080:8080 -e PORT=8080 --name devops-app devops-info-service:latest
+
+# Custom host and port
+docker run -d -p 3000:3000 -e HOST=0.0.0.0 -e PORT=3000 --name devops-app devops-info-service:latest
+```
+
 ## Configuration
 
 The application can be configured using the following environment variables:
