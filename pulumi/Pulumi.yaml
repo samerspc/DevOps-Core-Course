@@ -1,0 +1,3 @@
+name: lab04-pulumi
+runtime: python
+description: Lab 4 Pulumi infrastructure for Yandex Cloud
