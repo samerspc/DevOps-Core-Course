@@ -1,1 +1,17 @@
-test
+# Terraform
+*.tfstate
+*.tfstate.backup
+.terraform/
+*.tfvars
+authorized_key.json
+
+# Ansible
+*.retry
+.vault_pass
+ansible/inventory/*.pyc
+__pycache__/
+
+# Python
+venv/
+*.pyc
+*.pyo
