@@ -1,0 +1,9 @@
+---
+# Ansible Collections Requirements
+collections:
+  - name: community.docker
+    version: ">=3.0.0"
+
+# Python dependencies (if needed)
+# Can be installed via: pip install -r requirements.txt
+# Or: ansible-galaxy collection install -r requirements.yml

@@ -1,0 +1,6 @@
+---
+# Role metadata for web_app role
+dependencies:
+  - role: docker
+    # Docker role must run first to ensure Docker is installed
+    # before deploying application with Docker Compose
