@@ -1,0 +1,10 @@
+---
+- name: Provision web servers
+  hosts: local  # Changed to local for localhost testing
+  become: yes
+
+  roles:
+    - role: common
+      tags: [common, packages]
+    - role: docker
+      tags: [docker, docker_install, docker_config]

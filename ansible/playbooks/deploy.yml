@@ -1,0 +1,9 @@
+---
+- name: Deploy application
+  hosts: local  # Changed to local for localhost testing
+  become: yes
+  vars_files:
+    - "{{ playbook_dir }}/../group_vars/all.yml"
+
+  roles:
+    - web_app
