@@ -1,5 +1,6 @@
 ---
-docker_user: ubuntu
+# Docker user - defaults to ansible_user if not set
+docker_user: "{{ ansible_user | default('samerspc') }}"
 docker_packages:
   - docker-ce
   - docker-ce-cli

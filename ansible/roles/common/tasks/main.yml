@@ -1,14 +1,65 @@
 ---
-- name: Update apt cache
-  apt:
-    update_cache: yes
-    cache_valid_time: 3600
-
+# Package installation block with error handling
 - name: Install common packages
-  apt:
-    name: "{{ common_packages }}"
-    state: present
+  block:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
 
-- name: Set timezone
-  community.general.timezone:
-    name: "{{ common_timezone }}"
+    - name: Install common packages
+      apt:
+        name: "{{ common_packages }}"
+        state: present
+
+  rescue:
+    - name: Retry apt update on failure
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+      ignore_errors: yes
+
+    - name: Retry package installation
+      apt:
+        name: "{{ common_packages }}"
+        state: present
+
+  always:
+    - name: Log package installation completion
+      copy:
+        content: "Package installation completed at {{ ansible_date_time.iso8601 }}"
+        dest: /tmp/common_packages_completed.log
+        mode: '0644'
+
+  become: true
+  tags:
+    - packages
+    - common
+
+# User management block (placeholder for future user creation tasks)
+- name: Manage users
+  block:
+    # User creation tasks would go here
+    # Example:
+    # - name: Create application user
+    #   user:
+    #     name: appuser
+    #     state: present
+    - name: User management placeholder
+      debug:
+        msg: "User management tasks can be added here"
+      when: false  # Disabled by default
+
+  tags:
+    - users
+    - common
+
+# System configuration block
+- name: Configure system settings
+  block:
+    - name: Set timezone
+      community.general.timezone:
+        name: "{{ common_timezone }}"
+
+  tags:
+    - common
