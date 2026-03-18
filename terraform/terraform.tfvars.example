@@ -1,0 +1,34 @@
+# Copy this file to terraform.tfvars and fill in your values
+# terraform.tfvars is gitignored and should NOT be committed!
+
+# Yandex Cloud Configuration
+yandex_cloud_id                = "your-cloud-id-here"
+yandex_folder_id               = "your-folder-id-here"
+yandex_zone                    = "ru-central1-a"
+
+# Authentication (choose one method)
+# Option 1: OAuth token
+yandex_token                   = "your-oauth-token-here"
+
+# Option 2: Service account key file (recommended)
+# yandex_service_account_key_file = "/path/to/service-account-key.json"
+
+# VM Configuration
+vm_name                        = "lab04-vm"
+vm_platform_id                 = "standard-v2"
+vm_cores                       = 2
+vm_core_fraction               = 20  # Free tier: 20%
+vm_memory                      = 1    # GB
+vm_boot_disk_size              = 10   # GB
+vm_image_family                = "ubuntu-2204-lts"
+
+# SSH Configuration
+ssh_public_key_path            = "~/.ssh/id_rsa.pub"
+ssh_user                       = "ubuntu"
+
+# Security: Change this to your IP address for better security!
+# Find your IP: curl ifconfig.me
+allowed_ssh_cidr               = "0.0.0.0/0"  # Example: "123.45.67.89/32"
+
+# Project name for resource tagging
+project_name                   = "lab04"
