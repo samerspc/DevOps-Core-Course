@@ -1,7 +1,5 @@
 # DevOps Info Service
 
-[![Python CI](https://github.com/samerspc/DevOps-Core-Course/workflows/Python%20CI/badge.svg)](https://github.com/samerspc/DevOps-Core-Course/actions/workflows/python-ci.yml)
-
 A web application providing detailed information about itself and its runtime environment.
 
 ## Overview
@@ -174,21 +172,6 @@ The application can be configured using the following environment variables:
 | `HOST` | `0.0.0.0` | Host address to bind the server |
 | `PORT` | `5000` | Port number to listen on |
 | `DEBUG` | `False` | Enable debug mode (set to `true` to enable) |
-
-## Testing
-
-Run unit tests locally:
-
-```bash
-# Install development dependencies
-pip install -r requirements-dev.txt
-
-# Run tests
-pytest tests/ -v
-
-# Run with coverage (optional)
-pytest tests/ --cov=. --cov-report=term
-```
 
 ## Development
 

@@ -7,14 +7,22 @@ import socket
 import platform
 import logging
 from datetime import datetime, timezone
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, g
+from pythonjsonlogger import jsonlogger
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+# Configure JSON logging
+logHandler = logging.StreamHandler()
+formatter = jsonlogger.JsonFormatter(
+    '%(timestamp)s %(level)s %(name)s %(message)s',
+    timestamp=True
 )
+logHandler.setFormatter(formatter)
 logger = logging.getLogger(__name__)
+logger.addHandler(logHandler)
+logger.setLevel(logging.INFO)
+
+# Prevent duplicate logs
+logger.propagate = False
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -24,8 +32,48 @@ HOST = os.getenv('HOST', '0.0.0.0')
 PORT = int(os.getenv('PORT', 5000))
 DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
+# Request logging middleware
+@app.before_request
+def log_request():
+    """Log incoming HTTP requests."""
+    g.start_time = datetime.now(timezone.utc)
+    logger.info('Incoming request', extra={
+        'event': 'http_request',
+        'method': request.method,
+        'path': request.path,
+        'client_ip': request.remote_addr or 'unknown',
+        'user_agent': request.headers.get('User-Agent', 'unknown')
+    })
+
+@app.after_request
+def log_response(response):
+    """Log HTTP responses."""
+    if hasattr(g, 'start_time'):
+        duration_ms = (datetime.now(timezone.utc) - g.start_time).total_seconds() * 1000
+    else:
+        duration_ms = 0
+    
+    logger.info('HTTP response', extra={
+        'event': 'http_response',
+        'method': request.method,
+        'path': request.path,
+        'status_code': response.status_code,
+        'duration_ms': round(duration_ms, 2),
+        'client_ip': request.remote_addr or 'unknown'
+    })
+    
+    return response
+
 # Application start time (for uptime calculation)
 START_TIME = datetime.now(timezone.utc)
+
+# Log application startup
+logger.info('Application starting', extra={
+    'event': 'app_startup',
+    'host': os.getenv('HOST', '0.0.0.0'),
+    'port': int(os.getenv('PORT', 5000)),
+    'debug': os.getenv('DEBUG', 'False').lower() == 'true'
+})
 
 
 def get_system_info():
@@ -77,8 +125,6 @@ def get_request_info():
 @app.route('/')
 def index():
     """Main endpoint - service and system information."""
-    logger.info(f'Request: {request.method} {request.path} from {request.remote_addr}')
-    
     uptime = get_uptime()
     
     response = {
@@ -110,6 +156,11 @@ def health():
     """Health check endpoint for monitoring."""
     uptime = get_uptime()
     
+    logger.debug('Health check requested', extra={
+        'event': 'health_check',
+        'uptime_seconds': uptime['seconds']
+    })
+    
     return jsonify({
         'status': 'healthy',
         'timestamp': datetime.now(timezone.utc).isoformat(),
@@ -120,6 +171,12 @@ def health():
 @app.errorhandler(404)
 def not_found(error):
     """Handle 404 errors."""
+    logger.warning('Endpoint not found', extra={
+        'event': 'http_error',
+        'error_code': 404,
+        'path': request.path,
+        'method': request.method
+    })
     return jsonify({
         'error': 'Not Found',
         'message': 'Endpoint does not exist'
@@ -129,7 +186,14 @@ def not_found(error):
 @app.errorhandler(500)
 def internal_error(error):
     """Handle 500 errors."""
-    logger.error(f'Internal server error: {error}')
+    logger.error('Internal server error', extra={
+        'event': 'http_error',
+        'error_code': 500,
+        'error_type': type(error).__name__,
+        'error_message': str(error),
+        'path': request.path,
+        'method': request.method
+    })
     return jsonify({
         'error': 'Internal Server Error',
         'message': 'An unexpected error occurred'
@@ -137,6 +201,10 @@ def internal_error(error):
 
 
 if __name__ == '__main__':
-    logger.info('Starting DevOps Info Service...')
-    logger.info(f'Listening on {HOST}:{PORT}')
+    logger.info('DevOps Info Service started', extra={
+        'event': 'app_ready',
+        'host': HOST,
+        'port': PORT,
+        'debug': DEBUG
+    })
     app.run(host=HOST, port=PORT, debug=DEBUG)
