@@ -1,0 +1,40 @@
+# Go cache and build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work
+go.work.sum
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Git files
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+docs/
+README.md
+
+# Test files
+*_test.go
+test/
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
