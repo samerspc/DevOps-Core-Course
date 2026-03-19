@@ -7,8 +7,11 @@ import socket
 import platform
 import logging
 from datetime import datetime, timezone
-from flask import Flask, jsonify, request, g
+from time import monotonic
+
+from flask import Flask, jsonify, request, g, Response
 from pythonjsonlogger import jsonlogger
+from prometheus_client import Counter, Gauge, Histogram, generate_latest
 
 # Configure JSON logging
 logHandler = logging.StreamHandler()
@@ -32,11 +35,45 @@ HOST = os.getenv('HOST', '0.0.0.0')
 PORT = int(os.getenv('PORT', 5000))
 DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
+# ─── Prometheus metrics (Lab 8) ──────────────────────────────────────────────
+# Keep label cardinality low: endpoint is the route path (this app has only a
+# few static endpoints).
+http_requests_total = Counter(
+    'http_requests_total',
+    'Total HTTP requests',
+    ['method', 'endpoint', 'status_code'],
+)
+
+http_request_duration_seconds = Histogram(
+    'http_request_duration_seconds',
+    'HTTP request duration in seconds',
+    ['method', 'endpoint'],
+)
+
+# Number of HTTP requests currently being processed.
+http_requests_in_progress = Gauge(
+    'http_requests_in_progress',
+    'HTTP requests currently being processed',
+)
+
+
+@app.route('/metrics')
+def metrics():
+    # Expose Prometheus metrics in the default text format.
+    return Response(
+        generate_latest(),
+        mimetype='text/plain; version=0.0.4; charset=utf-8',
+    )
+
 # Request logging middleware
 @app.before_request
 def log_request():
     """Log incoming HTTP requests."""
     g.start_time = datetime.now(timezone.utc)
+    g.start_time_monotonic = monotonic()
+    # Ensure the gauge is decremented even if the request handler errors.
+    g.inprogress_cm = http_requests_in_progress.track_inprogress()
+    g.inprogress_cm.__enter__()
     logger.info('Incoming request', extra={
         'event': 'http_request',
         'method': request.method,
@@ -52,7 +89,32 @@ def log_response(response):
         duration_ms = (datetime.now(timezone.utc) - g.start_time).total_seconds() * 1000
     else:
         duration_ms = 0
-    
+
+    # Record Prometheus metrics for every response (success or error).
+    endpoint = request.path or 'unknown'
+    method = request.method or 'unknown'
+    status_code = str(getattr(response, 'status_code', 0))
+
+    http_requests_total.labels(
+        method=method,
+        endpoint=endpoint,
+        status_code=status_code,
+    ).inc()
+
+    if hasattr(g, 'start_time_monotonic'):
+        duration_seconds = monotonic() - g.start_time_monotonic
+    else:
+        duration_seconds = duration_ms / 1000.0
+
+    http_request_duration_seconds.labels(
+        method=method,
+        endpoint=endpoint,
+    ).observe(duration_seconds)
+
+    # Stop tracking in-progress requests.
+    if hasattr(g, 'inprogress_cm'):
+        g.inprogress_cm.__exit__(None, None, None)
+
     logger.info('HTTP response', extra={
         'event': 'http_response',
         'method': request.method,
