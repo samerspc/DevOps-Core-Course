@@ -1,0 +1,264 @@
+### Task 1 - Cluster setup
+Kubernetes control plane is running at https://127.0.0.1:52348
+CoreDNS is running at https://127.0.0.1:52348/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+
+To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
+NAME                  STATUS   ROLES           AGE   VERSION
+lab09-control-plane   Ready    control-plane   86s   v1.35.0
+
+### Apply base manifests
+namespace/lab09 created
+deployment.apps/devops-info-python created
+service/devops-info-python-svc created
+Waiting for deployment "devops-info-python" rollout to finish: 0 of 3 updated replicas are available...
+Waiting for deployment "devops-info-python" rollout to finish: 1 of 3 updated replicas are available...
+Waiting for deployment "devops-info-python" rollout to finish: 2 of 3 updated replicas are available...
+deployment "devops-info-python" successfully rolled out
+NAME                                 READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                        SELECTOR
+deployment.apps/devops-info-python   3/3     3            3           7s    app          devops-info-python:lab09-v1   app=devops-info-python
+
+NAME                                      READY   STATUS    RESTARTS   AGE   IP           NODE                  NOMINATED NODE   READINESS GATES
+pod/devops-info-python-8698d77b8b-459lj   1/1     Running   0          7s    10.244.0.7   lab09-control-plane   <none>           <none>
+pod/devops-info-python-8698d77b8b-6lm9k   1/1     Running   0          7s    10.244.0.5   lab09-control-plane   <none>           <none>
+pod/devops-info-python-8698d77b8b-7tfnk   1/1     Running   0          7s    10.244.0.6   lab09-control-plane   <none>           <none>
+
+NAME                             TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE   SELECTOR
+service/devops-info-python-svc   NodePort   10.96.132.249   <none>        80:30080/TCP   7s    app=devops-info-python
+
+### Service connectivity
+{"status":"healthy","timestamp":"2026-03-26T12:41:40.323354+00:00","uptime_seconds":9}
+
+### Scaling to 5
+deployment.apps/devops-info-python scaled
+Waiting for deployment "devops-info-python" rollout to finish: 3 of 5 updated replicas are available...
+Waiting for deployment "devops-info-python" rollout to finish: 4 of 5 updated replicas are available...
+deployment "devops-info-python" successfully rolled out
+NAME                                  READY   STATUS    RESTARTS   AGE
+devops-info-python-8698d77b8b-459lj   1/1     Running   0          17s
+devops-info-python-8698d77b8b-6lm9k   1/1     Running   0          17s
+devops-info-python-8698d77b8b-7tfnk   1/1     Running   0          17s
+devops-info-python-8698d77b8b-htl5n   1/1     Running   0          7s
+devops-info-python-8698d77b8b-n22tz   1/1     Running   0          7s
+
+### Rolling update to v2
+deployment.apps/devops-info-python image updated
+Waiting for deployment "devops-info-python" rollout to finish: 1 out of 5 new replicas have been updated...
+Waiting for deployment "devops-info-python" rollout to finish: 1 out of 5 new replicas have been updated...
+Waiting for deployment "devops-info-python" rollout to finish: 1 out of 5 new replicas have been updated...
+Waiting for deployment "devops-info-python" rollout to finish: 2 out of 5 new replicas have been updated...
+Waiting for deployment "devops-info-python" rollout to finish: 2 out of 5 new replicas have been updated...
+Waiting for deployment "devops-info-python" rollout to finish: 2 out of 5 new replicas have been updated...
+Waiting for deployment "devops-info-python" rollout to finish: 3 out of 5 new replicas have been updated...
+Waiting for deployment "devops-info-python" rollout to finish: 3 out of 5 new replicas have been updated...
+Waiting for deployment "devops-info-python" rollout to finish: 3 out of 5 new replicas have been updated...
+Waiting for deployment "devops-info-python" rollout to finish: 4 out of 5 new replicas have been updated...
+Waiting for deployment "devops-info-python" rollout to finish: 4 out of 5 new replicas have been updated...
+Waiting for deployment "devops-info-python" rollout to finish: 4 out of 5 new replicas have been updated...
+Waiting for deployment "devops-info-python" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "devops-info-python" rollout to finish: 1 old replicas are pending termination...
+deployment "devops-info-python" successfully rolled out
+deployment.apps/devops-info-python 
+REVISION  CHANGE-CAUSE
+1         <none>
+2         <none>
+
+
+### Rollback to previous revision
+deployment.apps/devops-info-python rolled back
+Waiting for deployment "devops-info-python" rollout to finish: 1 out of 5 new replicas have been updated...
+Waiting for deployment "devops-info-python" rollout to finish: 1 out of 5 new replicas have been updated...
+Waiting for deployment "devops-info-python" rollout to finish: 1 out of 5 new replicas have been updated...
+Waiting for deployment "devops-info-python" rollout to finish: 1 out of 5 new replicas have been updated...
+Waiting for deployment "devops-info-python" rollout to finish: 2 out of 5 new replicas have been updated...
+Waiting for deployment "devops-info-python" rollout to finish: 2 out of 5 new replicas have been updated...
+Waiting for deployment "devops-info-python" rollout to finish: 2 out of 5 new replicas have been updated...
+Waiting for deployment "devops-info-python" rollout to finish: 2 out of 5 new replicas have been updated...
+Waiting for deployment "devops-info-python" rollout to finish: 3 out of 5 new replicas have been updated...
+Waiting for deployment "devops-info-python" rollout to finish: 3 out of 5 new replicas have been updated...
+Waiting for deployment "devops-info-python" rollout to finish: 3 out of 5 new replicas have been updated...
+Waiting for deployment "devops-info-python" rollout to finish: 3 out of 5 new replicas have been updated...
+Waiting for deployment "devops-info-python" rollout to finish: 4 out of 5 new replicas have been updated...
+Waiting for deployment "devops-info-python" rollout to finish: 4 out of 5 new replicas have been updated...
+Waiting for deployment "devops-info-python" rollout to finish: 4 out of 5 new replicas have been updated...
+Waiting for deployment "devops-info-python" rollout to finish: 4 out of 5 new replicas have been updated...
+Waiting for deployment "devops-info-python" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "devops-info-python" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "devops-info-python" rollout to finish: 1 old replicas are pending termination...
+deployment "devops-info-python" successfully rolled out
+deployment.apps/devops-info-python 
+REVISION  CHANGE-CAUSE
+2         <none>
+3         <none>
+
+
+### Bonus - ingress controller
+namespace/ingress-nginx created
+serviceaccount/ingress-nginx created
+serviceaccount/ingress-nginx-admission created
+role.rbac.authorization.k8s.io/ingress-nginx created
+role.rbac.authorization.k8s.io/ingress-nginx-admission created
+clusterrole.rbac.authorization.k8s.io/ingress-nginx created
+clusterrole.rbac.authorization.k8s.io/ingress-nginx-admission created
+rolebinding.rbac.authorization.k8s.io/ingress-nginx created
+rolebinding.rbac.authorization.k8s.io/ingress-nginx-admission created
+clusterrolebinding.rbac.authorization.k8s.io/ingress-nginx created
+clusterrolebinding.rbac.authorization.k8s.io/ingress-nginx-admission created
+configmap/ingress-nginx-controller created
+service/ingress-nginx-controller created
+service/ingress-nginx-controller-admission created
+deployment.apps/ingress-nginx-controller created
+job.batch/ingress-nginx-admission-create created
+job.batch/ingress-nginx-admission-patch created
+ingressclass.networking.k8s.io/nginx created
+validatingwebhookconfiguration.admissionregistration.k8s.io/ingress-nginx-admission created
+pod/ingress-nginx-controller-56dc4b4c6-knk8r condition met
+
+### Bonus - app2 and ingress
+deployment.apps/devops-info-python-app2 created
+service/devops-info-python-app2-svc created
+secret/lab09-tls created
+ingress.networking.k8s.io/devops-info-ingress created
+NAME                  CLASS   HOSTS               ADDRESS   PORTS     AGE
+devops-info-ingress   nginx   local.example.com             80, 443   0s
+
+### Bonus - routing checks
+<html>
+<head><title>308 Permanent Redirect</title></head>
+<body>
+<center><h1>308 Permanent Redirect</h1></center>
+<hr><center>nginx</center>
+</body>
+</html>
+<html>
+<head><title>308 Permanent Redirect</title></head>
+<body>
+<center><h1>308 Permanent Redirect</h1></center>
+<hr><center>nginx</center>
+</body>
+</html>
+{"endpoints":[{"description":"Service information","method":"GET","path":"/"},{"description":"Health check","method":"GET","path":"/health"}],"request":{"client_ip":"10.244.0.22","method":"GET","path":"/","user_agent":"curl/8.7.1"},"runtime":{"current_time":"2026-03-26T12:44:39.835474+00:00","timezone":"UTC","uptime_human":"2 minutes","uptime_seconds":122},"service":{"description":"DevOps course info service","framework":"Flask","name":"devops-info-service","version":"1.0.0"},"system":{"architecture":"aarch64","cpu_count":8,"hostname":"devops-info-python-8698d77b8b-hppdw","platform":"Linux","platform_version":"Linux-6.12.5-linuxkit-aarch64-with-glibc2.41","python_version":"3.13.12"}}
+
+### Final state
+NAME                                           READY   STATUS    RESTARTS   AGE
+pod/devops-info-python-8698d77b8b-ggg48        1/1     Running   0          116s
+pod/devops-info-python-8698d77b8b-hppdw        1/1     Running   0          2m3s
+pod/devops-info-python-8698d77b8b-m5tqd        1/1     Running   0          2m17s
+pod/devops-info-python-8698d77b8b-pwgdl        1/1     Running   0          2m10s
+pod/devops-info-python-8698d77b8b-w5jsr        1/1     Running   0          109s
+pod/devops-info-python-app2-74f49bb99f-5kxhl   0/1     Running   0          4s
+pod/devops-info-python-app2-74f49bb99f-7llgh   0/1     Running   0          4s
+
+NAME                                  TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
+service/devops-info-python-app2-svc   ClusterIP   10.96.236.133   <none>        80/TCP         4s
+service/devops-info-python-svc        NodePort    10.96.132.249   <none>        80:30080/TCP   3m9s
+
+NAME                                      READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/devops-info-python        5/5     5            5           3m9s
+deployment.apps/devops-info-python-app2   0/2     2            0           4s
+
+NAME                                                 DESIRED   CURRENT   READY   AGE
+replicaset.apps/devops-info-python-6bc6b9f9cf        0         0         0       2m52s
+replicaset.apps/devops-info-python-8698d77b8b        5         5         5       3m9s
+replicaset.apps/devops-info-python-app2-74f49bb99f   2         2         0       4s
+Name:                   devops-info-python
+Namespace:              lab09
+CreationTimestamp:      Thu, 26 Mar 2026 15:41:30 +0300
+Labels:                 app=devops-info-python
+                        tier=backend
+Annotations:            deployment.kubernetes.io/revision: 3
+Selector:               app=devops-info-python
+Replicas:               5 desired | 5 updated | 5 total | 5 available | 0 unavailable
+StrategyType:           RollingUpdate
+MinReadySeconds:        0
+RollingUpdateStrategy:  0 max unavailable, 1 max surge
+Pod Template:
+  Labels:  app=devops-info-python
+           tier=backend
+  Containers:
+   app:
+    Image:      devops-info-python:lab09-v1
+    Port:       5000/TCP
+    Host Port:  0/TCP
+    Limits:
+      cpu:     250m
+      memory:  256Mi
+    Requests:
+      cpu:      100m
+      memory:   128Mi
+    Liveness:   http-get http://:5000/health delay=10s timeout=2s period=10s #success=1 #failure=3
+    Readiness:  http-get http://:5000/health delay=5s timeout=2s period=5s #success=1 #failure=3
+    Environment:
+      HOST:        0.0.0.0
+      PORT:        5000
+      DEBUG:       false
+    Mounts:        <none>
+  Volumes:         <none>
+  Node-Selectors:  <none>
+  Tolerations:     <none>
+Conditions:
+  Type           Status  Reason
+  ----           ------  ------
+  Available      True    MinimumReplicasAvailable
+  Progressing    True    NewReplicaSetAvailable
+OldReplicaSets:  devops-info-python-6bc6b9f9cf (0/0 replicas created)
+NewReplicaSet:   devops-info-python-8698d77b8b (5/5 replicas created)
+Events:
+  Type    Reason             Age                    From                   Message
+  ----    ------             ----                   ----                   -------
+  Normal  ScalingReplicaSet  3m9s                   deployment-controller  Scaled up replica set devops-info-python-8698d77b8b from 0 to 3
+  Normal  ScalingReplicaSet  2m59s                  deployment-controller  Scaled up replica set devops-info-python-8698d77b8b from 3 to 5
+  Normal  ScalingReplicaSet  2m52s                  deployment-controller  Scaled up replica set devops-info-python-6bc6b9f9cf from 0 to 1
+  Normal  ScalingReplicaSet  2m45s                  deployment-controller  Scaled down replica set devops-info-python-8698d77b8b from 5 to 4
+  Normal  ScalingReplicaSet  2m45s                  deployment-controller  Scaled up replica set devops-info-python-6bc6b9f9cf from 1 to 2
+  Normal  ScalingReplicaSet  2m38s                  deployment-controller  Scaled down replica set devops-info-python-8698d77b8b from 4 to 3
+  Normal  ScalingReplicaSet  2m38s                  deployment-controller  Scaled up replica set devops-info-python-6bc6b9f9cf from 2 to 3
+  Normal  ScalingReplicaSet  2m31s                  deployment-controller  Scaled down replica set devops-info-python-8698d77b8b from 3 to 2
+  Normal  ScalingReplicaSet  2m31s                  deployment-controller  Scaled up replica set devops-info-python-6bc6b9f9cf from 3 to 4
+  Normal  ScalingReplicaSet  102s (x13 over 2m24s)  deployment-controller  (combined from similar events): Scaled down replica set devops-info-python-6bc6b9f9cf from 1 to 0
+
+### Bonus - wait for app2 readiness
+deployment "devops-info-python-app2" successfully rolled out
+NAME                                       READY   STATUS    RESTARTS   AGE
+devops-info-python-app2-74f49bb99f-5kxhl   1/1     Running   0          18s
+devops-info-python-app2-74f49bb99f-7llgh   1/1     Running   0          18s
+
+### Bonus - explicit app1/app2 HTTPS checks
+{"endpoints":[{"description":"Service information","method":"GET","path":"/"},{"description":"Health check","method":"GET","path":"/health"}],"request":{"client_ip":"10.244.0.22","method":"GET","path":"/","user_agent":"c
+{
+  "endpoints": [
+    {
+      "description": "Service information",
+      "method": "GET",
+      "path": "/"
+    },
+    {
+      "description": "Health check",
+      "method": "GET",
+      "path": "/health"
+    }
+  ],
+  
+
+### Bonus update - app2 switched to Go image
+NAME                      READY   UP-TO-DATE   AVAILABLE   AGE     CONTAINERS   IMAGES                    SELECTOR
+devops-info-python-app2   2/2     2            2           9m50s   app          devops-info-go:lab09-v1   app=devops-info-python-app2
+NAME                                       READY   STATUS    RESTARTS   AGE   IP            NODE                  NOMINATED NODE   READINESS GATES
+devops-info-python-app2-77cd9d7c46-26skt   1/1     Running   0          22s   10.244.0.25   lab09-control-plane   <none>           <none>
+devops-info-python-app2-77cd9d7c46-l24b8   1/1     Running   0          15s   10.244.0.26   lab09-control-plane   <none>           <none>
+
+### Bonus update - distinct app responses via HTTPS ingress
+APP1:
+APP2:
+
+### Bonus update - app2 switched to Go image (retry evidence)
+NAME                      READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                    SELECTOR
+devops-info-python-app2   2/2     2            2           10m   app          devops-info-go:lab09-v1   app=devops-info-python-app2
+NAME                                       READY   STATUS    RESTARTS   AGE   IP            NODE                  NOMINATED NODE   READINESS GATES
+devops-info-python-app2-77cd9d7c46-26skt   1/1     Running   0          45s   10.244.0.25   lab09-control-plane   <none>           <none>
+devops-info-python-app2-77cd9d7c46-l24b8   1/1     Running   0          38s   10.244.0.26   lab09-control-plane   <none>           <none>
+
+### Bonus update - app1/app2 framework check via HTTPS ingress
+APP1_FRAMEWORK:
+"framework":"Flask"
+APP2_FRAMEWORK:
+"framework":"Go"

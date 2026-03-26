@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devops-info-python-app2
+  namespace: lab09
+  labels:
+    app: devops-info-python-app2
+    tier: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: devops-info-python-app2
+  template:
+    metadata:
+      labels:
+        app: devops-info-python-app2
+        tier: backend
+    spec:
+      containers:
+        - name: app
+          image: devops-info-go:lab09-v1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: HOST
+              value: "0.0.0.0"
+            - name: PORT
+              value: "8080"
+          resources:
+            requests:
+              cpu: "80m"
+              memory: "96Mi"
+            limits:
+              cpu: "200m"
+              memory: "192Mi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
