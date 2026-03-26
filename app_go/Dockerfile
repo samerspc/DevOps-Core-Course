@@ -29,6 +29,9 @@ FROM alpine:latest
 RUN addgroup -g 1000 appuser && \
     adduser -D -u 1000 -G appuser appuser
 
+# Healthcheck utility must be installed before dropping privileges.
+RUN apk add --no-cache wget
+
 # Set working directory
 WORKDIR /app
 
@@ -47,8 +50,7 @@ EXPOSE 8080
 # Set environment variables
 ENV PORT=8080
 
-# Health check (install wget for health check)
-RUN apk add --no-cache wget
+# Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
 
