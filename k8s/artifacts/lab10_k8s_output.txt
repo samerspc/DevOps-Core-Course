@@ -1,0 +1,84 @@
+$ kind create cluster --name lab10
+Creating cluster "lab10" ...
+ • Ensuring node image (kindest/node:v1.35.0) 🖼  ...
+ ✓ Ensuring node image (kindest/node:v1.35.0) 🖼
+ • Preparing nodes 📦   ...
+ ✓ Preparing nodes 📦 
+ • Writing configuration 📜  ...
+ ✓ Writing configuration 📜
+ • Starting control-plane 🕹️  ...
+ ✓ Starting control-plane 🕹️
+ • Installing CNI 🔌  ...
+ ✓ Installing CNI 🔌
+ • Installing StorageClass 💾  ...
+ ✓ Installing StorageClass 💾
+Set kubectl context to "kind-lab10"
+You can now use your cluster with:
+
+kubectl cluster-info --context kind-lab10
+
+Thanks for using kind! 😊
+
+$ kubectl cluster-info
+Kubernetes control plane is running at https://127.0.0.1:54934
+CoreDNS is running at https://127.0.0.1:54934/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+
+To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
+
+$ helm install app-dev k8s/app-python -f k8s/app-python/values-dev.yaml --set image.repository=nginx --set image.tag=stable
+NAME: app-dev
+LAST DEPLOYED: Fri Apr  3 17:05:32 2026
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+DESCRIPTION: Install complete
+TEST SUITE: None
+NOTES:
+1. Get the application URL by running these commands:
+  export NODE_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[0].nodePort}" services app-dev-app-python)
+  export NODE_IP=$(kubectl get nodes --namespace default -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo "Visit: http://$NODE_IP:$NODE_PORT"
+
+$ helm upgrade --install app-prod k8s/app-python -f k8s/app-python/values-prod.yaml --set image.repository=nginx --set image.tag=stable
+Release "app-prod" does not exist. Installing it now.
+NAME: app-prod
+LAST DEPLOYED: Fri Apr  3 17:06:04 2026
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+DESCRIPTION: Install complete
+TEST SUITE: None
+NOTES:
+1. Get the application URL by running these commands:
+  export SERVICE_IP=$(kubectl get svc --namespace default app-prod-app-python -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+  echo "Visit: http://$SERVICE_IP:80"
+
+$ helm list
+NAME    	NAMESPACE	REVISION	UPDATED                             	STATUS  	CHART           	APP VERSION
+app-dev 	default  	1       	2026-04-03 17:05:32.587093 +0300 MSK	deployed	app-python-0.1.0	1.0.0      
+app-prod	default  	1       	2026-04-03 17:06:04.520224 +0300 MSK	deployed	app-python-0.1.0	1.0.0      
+
+$ kubectl get all
+NAME                                       READY   STATUS    RESTARTS   AGE
+pod/app-dev-app-python-6799754bd7-xb7qq    0/1     Running   0          28s
+pod/app-prod-app-python-588fd47cd4-58nkj   0/1     Running   0          7s
+pod/app-prod-app-python-588fd47cd4-5nnzj   0/1     Running   0          7s
+pod/app-prod-app-python-588fd47cd4-kk5fl   0/1     Running   0          7s
+pod/app-prod-app-python-588fd47cd4-pf7rs   0/1     Running   0          7s
+pod/app-prod-app-python-588fd47cd4-qp7h9   0/1     Running   0          7s
+
+NAME                          TYPE           CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
+service/app-dev-app-python    NodePort       10.96.85.155   <none>        80:30809/TCP   28s
+service/app-prod-app-python   LoadBalancer   10.96.31.121   <pending>     80:32469/TCP   7s
+service/kubernetes            ClusterIP      10.96.0.1      <none>        443/TCP        59s
+
+NAME                                  READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/app-dev-app-python    0/1     1            0           28s
+deployment.apps/app-prod-app-python   0/5     5            0           7s
+
+NAME                                             DESIRED   CURRENT   READY   AGE
+replicaset.apps/app-dev-app-python-6799754bd7    1         1         0       28s
+replicaset.apps/app-prod-app-python-588fd47cd4   5         5         0       7s
+
+$ kubectl get jobs
+No resources found in default namespace.
