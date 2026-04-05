@@ -1,0 +1,17 @@
+apiVersion: v2
+name: app-python
+description: Helm chart for DevOps-Core-Course Flask app (app_python)
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - python
+  - flask
+  - web
+maintainers:
+  - name: Your Name
+    email: your.email@example.com
+dependencies:
+  - name: common-lib
+    version: 0.1.0
+    repository: "file://../common-lib"
