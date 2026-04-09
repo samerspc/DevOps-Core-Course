@@ -14,8 +14,11 @@ spec:
       labels:
         {{- include "common.selectorLabels" . | nindent 8 }}
       annotations:
-        {{- toYaml .Values.podAnnotations | nindent 8 }}
+        {{- include "app-python.podAnnotations" . | nindent 8 }}
     spec:
+      {{- if .Values.serviceAccount.create }}
+      serviceAccountName: {{ include "app-python.serviceAccountName" . }}
+      {{- end }}
       containers:
         - name: {{ include "app-python.name" . }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
@@ -23,6 +26,13 @@ spec:
           ports:
             - containerPort: {{ .Values.service.targetPort }}
               name: http
+          env:
+            {{- include "app-python.standardEnv" . | nindent 12 }}
+          {{- if .Values.secrets.enabled }}
+          envFrom:
+            - secretRef:
+                name: {{ include "app-python.secretName" . }}
+          {{- end }}
           livenessProbe:
             {{- toYaml .Values.livenessProbe | nindent 12 }}
           readinessProbe:
