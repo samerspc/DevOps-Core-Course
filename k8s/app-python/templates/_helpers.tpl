@@ -41,3 +41,52 @@ Selector labels
 app.kubernetes.io/name: {{ include "app-python.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
+
+{{/*
+Kubernetes Secret resource name (Helm-managed credentials).
+*/}}
+{{- define "app-python.secretName" -}}
+{{- printf "%s-secret" (include "app-python.fullname" .) }}
+{{- end }}
+
+{{/*
+ServiceAccount name for the workload (Vault K8s auth binds to this SA).
+*/}}
+{{- define "app-python.serviceAccountName" -}}
+{{- if .Values.serviceAccount.name }}
+{{- .Values.serviceAccount.name }}
+{{- else }}
+{{- include "app-python.fullname" . }}
+{{- end }}
+{{- end }}
+
+{{/*
+Non-sensitive env vars (DRY — used from deployment; extend in one place).
+*/}}
+{{- define "app-python.standardEnv" -}}
+- name: APP_CHART_NAME
+  value: {{ include "app-python.name" . | quote }}
+- name: HELM_RELEASE
+  value: {{ .Release.Name | quote }}
+{{- end }}
+
+{{/*
+Merged pod annotations: user podAnnotations + optional Vault Agent Injector.
+*/}}
+{{- define "app-python.podAnnotations" -}}
+{{- $ann := dict }}
+{{- range $k, $v := (default (dict) .Values.podAnnotations) }}
+{{- $_ := set $ann $k $v }}
+{{- end }}
+{{- if .Values.vault.inject.enabled }}
+{{- $_ := set $ann "vault.hashicorp.com/agent-inject" "true" }}
+{{- $_ := set $ann "vault.hashicorp.com/role" .Values.vault.role }}
+{{- if .Values.vault.inject.template.enabled }}
+{{- $_ := set $ann "vault.hashicorp.com/agent-inject-secret-config" .Values.vault.inject.secretPath }}
+{{- $_ := set $ann "vault.hashicorp.com/agent-inject-template-config" .Values.vault.inject.template.content }}
+{{- else if .Values.vault.inject.secretPath }}
+{{- $_ := set $ann "vault.hashicorp.com/agent-inject-secret-config" .Values.vault.inject.secretPath }}
+{{- end }}
+{{- end }}
+{{- toYaml $ann }}
+{{- end }}

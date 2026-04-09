@@ -1,0 +1,38 @@
+# Lab 11: Vault Agent Injector + optional templated secret file (bonus).
+# Install Vault separately (see k8s/SECRETS.md — use hashicorp/vault Helm chart or clone vault-helm if repo returns 403), then:
+#   helm upgrade --install lab11 ./k8s/app-python -f ./k8s/app-python/values-dev.yaml -f ./k8s/app-python/values-lab11.yaml \
+#     --set image.repository=nginx --set image.tag=stable
+
+replicaCount: 1
+
+# nginx listens on 80 (not Flask 5000) — probes/targetPort aligned for demo image
+service:
+  targetPort: 80
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: 80
+  initialDelaySeconds: 5
+  periodSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: /
+    port: 80
+  initialDelaySeconds: 5
+  periodSeconds: 3
+
+vault:
+  role: app-python
+  inject:
+    enabled: true
+    secretPath: secret/data/myapp/config
+    template:
+      enabled: true
+      content: |
+        {{- with secret "secret/data/myapp/config" }}
+        USERNAME={{ .Data.data.username }}
+        PASSWORD={{ .Data.data.password }}
+        API_KEY={{ .Data.data.api_key }}
+        {{- end }}

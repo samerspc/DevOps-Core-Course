@@ -37,6 +37,25 @@ readinessProbe:
 podAnnotations: {}
 podLabels: {}
 
+serviceAccount:
+  create: true
+  name: ""
+
+secrets:
+  enabled: true
+  stringData:
+    username: changeme
+    password: changeme
+
+vault:
+  role: app-python
+  inject:
+    enabled: false
+    secretPath: secret/data/myapp/config
+    template:
+      enabled: false
+      content: ""
+
 nodeSelector: {}
 tolerations: []
 affinity: {}
