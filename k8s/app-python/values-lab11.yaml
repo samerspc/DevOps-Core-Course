@@ -5,6 +5,12 @@
 
 replicaCount: 1
 
+# Lab 12 defaults (ConfigMap + PVC) target the Flask app; disable for nginx/Vault-only demos.
+configMap:
+  enabled: false
+persistence:
+  enabled: false
+
 # nginx listens on 80 (not Flask 5000) — probes/targetPort aligned for demo image
 service:
   targetPort: 80

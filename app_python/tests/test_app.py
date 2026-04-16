@@ -36,15 +36,15 @@ class TestRootEndpoint:
     def test_top_level_keys(self, client):
         """Response must contain all required top-level keys."""
         data = client.get("/").get_json()
-        required_keys = {"service", "system", "runtime", "request", "endpoints"}
+        required_keys = {"service", "system", "runtime", "request", "endpoints", "visits"}
         assert required_keys.issubset(data.keys())
 
     # ── service section ──
 
     def test_service_fields(self, client):
-        """Service section must include name, version, description, framework."""
+        """Service section must include name, version, description, framework, environment."""
         service = client.get("/").get_json()["service"]
-        for key in ("name", "version", "description", "framework"):
+        for key in ("name", "version", "description", "framework", "environment"):
             assert key in service, f"Missing service field: {key}"
             assert isinstance(service[key], str)
 
@@ -138,14 +138,40 @@ class TestRootEndpoint:
         """Endpoints should be a non-empty list."""
         endpoints = client.get("/").get_json()["endpoints"]
         assert isinstance(endpoints, list)
-        assert len(endpoints) >= 2
+        assert len(endpoints) >= 3
 
     def test_endpoints_contain_root_and_health(self, client):
-        """Endpoints list should advertise / and /health."""
+        """Endpoints list should advertise /, /visits, and /health."""
         endpoints = client.get("/").get_json()["endpoints"]
         paths = [ep["path"] for ep in endpoints]
         assert "/" in paths
+        assert "/visits" in paths
         assert "/health" in paths
+
+
+class TestVisitsEndpoint:
+    """Tests for GET /visits and visit counter behaviour."""
+
+    def test_visits_returns_200(self, client):
+        response = client.get("/visits")
+        assert response.status_code == 200
+        assert response.content_type == "application/json"
+
+    def test_visits_starts_at_zero(self, client):
+        data = client.get("/visits").get_json()
+        assert data["visits"] == 0
+
+    def test_root_increments_visits(self, client):
+        client.get("/")
+        assert client.get("/visits").get_json()["visits"] == 1
+        client.get("/")
+        assert client.get("/visits").get_json()["visits"] == 2
+
+    def test_root_response_includes_total(self, client):
+        data = client.get("/").get_json()
+        assert data["visits"]["total"] == 1
+        data2 = client.get("/").get_json()
+        assert data2["visits"]["total"] == 2
 
 
 # ─── GET /health endpoint tests ─────────────────────────────────────

@@ -1,4 +1,5 @@
-replicaCount: 5
+# Single replica while persistence uses ReadWriteOnce (Lab 12); set persistence.enabled: false to scale out.
+replicaCount: 1
 
 image:
   tag: "1.0.0"
