@@ -28,17 +28,44 @@ spec:
               name: http
           env:
             {{- include "app-python.standardEnv" . | nindent 12 }}
-          {{- if .Values.secrets.enabled }}
+          {{- if or .Values.secrets.enabled .Values.configMap.enabled }}
           envFrom:
+            {{- if .Values.secrets.enabled }}
             - secretRef:
                 name: {{ include "app-python.secretName" . }}
+            {{- end }}
+            {{- if .Values.configMap.enabled }}
+            - configMapRef:
+                name: {{ include "app-python.fullname" . }}-env
+            {{- end }}
           {{- end }}
+          volumeMounts:
+            {{- if .Values.configMap.enabled }}
+            - name: app-config
+              mountPath: /config
+              readOnly: true
+            {{- end }}
+            - name: app-data
+              mountPath: /data
           livenessProbe:
             {{- toYaml .Values.livenessProbe | nindent 12 }}
           readinessProbe:
             {{- toYaml .Values.readinessProbe | nindent 12 }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        {{- if .Values.configMap.enabled }}
+        - name: app-config
+          configMap:
+            name: {{ include "app-python.fullname" . }}-config
+        {{- end }}
+        - name: app-data
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "app-python.fullname" . }}-data
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
       nodeSelector:
         {{- toYaml .Values.nodeSelector | nindent 8 }}
       tolerations:

@@ -24,9 +24,9 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Only copy necessary files (use .dockerignore to exclude others)
 COPY app.py .
 
-# Create directory for app data if needed and set ownership
-RUN mkdir -p /app/data && \
-    chown -R appuser:appuser /app
+# Writable data dir for Lab 12 visit counter (PVC or compose volume → /data)
+RUN mkdir -p /app/data /data && \
+    chown -R appuser:appuser /app /data
 
 # Switch to non-root user (MANDATORY)
 USER appuser

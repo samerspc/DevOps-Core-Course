@@ -1,0 +1,12 @@
+services:
+  devops-info:
+    build: .
+    ports:
+      # 5000 is often taken on macOS (AirPlay); use 5001 if needed
+      - "5001:5000"
+    environment:
+      VISITS_FILE: /data/visits
+      APP_CONFIG_PATH: /config/config.json
+    volumes:
+      - ./data:/data
+      - ./sample-config:/config:ro

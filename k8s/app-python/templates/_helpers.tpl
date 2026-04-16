@@ -68,6 +68,10 @@ Non-sensitive env vars (DRY — used from deployment; extend in one place).
   value: {{ include "app-python.name" . | quote }}
 - name: HELM_RELEASE
   value: {{ .Release.Name | quote }}
+- name: VISITS_FILE
+  value: "/data/visits"
+- name: APP_CONFIG_PATH
+  value: "/config/config.json"
 {{- end }}
 
 {{/*
@@ -87,6 +91,10 @@ Merged pod annotations: user podAnnotations + optional Vault Agent Injector.
 {{- else if .Values.vault.inject.secretPath }}
 {{- $_ := set $ann "vault.hashicorp.com/agent-inject-secret-config" .Values.vault.inject.secretPath }}
 {{- end }}
+{{- end }}
+{{- if and .Values.configMap.enabled .Values.configReload.checksumAnnotation }}
+{{- $sum := printf "%s|%s|%s" (.Files.Get "files/config.json") .Values.environment .Values.logLevel | sha256sum }}
+{{- $_ := set $ann "checksum/config" $sum }}
 {{- end }}
 {{- toYaml $ann }}
 {{- end }}

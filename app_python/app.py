@@ -2,10 +2,12 @@
 DevOps Info Service
 Main application module
 """
+import json
 import os
 import socket
 import platform
 import logging
+import threading
 from datetime import datetime, timezone
 from time import monotonic
 
@@ -34,6 +36,92 @@ app = Flask(__name__)
 HOST = os.getenv('HOST', '0.0.0.0')
 PORT = int(os.getenv('PORT', 5000))
 DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
+
+# Lab 12: persistent visit counter + optional mounted config (ConfigMap)
+def _visits_file():
+    return os.environ.get('VISITS_FILE', '/data/visits')
+
+
+APP_CONFIG_PATH = os.getenv('APP_CONFIG_PATH', '/config/config.json')
+_visits_lock = threading.Lock()
+_config_lock = threading.Lock()
+_config_mtime = None
+_config_cache = None
+
+DEFAULT_APP_CONFIG = {
+    'appName': 'devops-info-service',
+    'environment': 'dev',
+    'features': {
+        'metrics': True,
+    },
+}
+
+
+def _read_visit_count() -> int:
+    try:
+        with open(_visits_file(), encoding='utf-8') as f:
+            raw = f.read().strip()
+            return int(raw) if raw else 0
+    except (FileNotFoundError, ValueError, OSError):
+        return 0
+
+
+def _write_visit_count(value: int) -> None:
+    path = _visits_file()
+    parent = os.path.dirname(path) or '.'
+    os.makedirs(parent, exist_ok=True)
+    tmp_path = f'{path}.tmp'
+    with open(tmp_path, 'w', encoding='utf-8') as f:
+        f.write(str(value))
+    os.replace(tmp_path, path)
+
+
+def increment_visit_count() -> int:
+    """Atomically increment the on-disk counter; return new total."""
+    with _visits_lock:
+        n = _read_visit_count() + 1
+        _write_visit_count(n)
+        return n
+
+
+def get_visit_count() -> int:
+    with _visits_lock:
+        return _read_visit_count()
+
+
+def load_app_config():
+    """
+    Load JSON config from APP_CONFIG_PATH when present.
+    Reloads when the file mtime changes (ConfigMap updates without subPath).
+    """
+    global _config_mtime, _config_cache
+    with _config_lock:
+        try:
+            st = os.stat(APP_CONFIG_PATH)
+            mtime = st.st_mtime
+        except (FileNotFoundError, OSError):
+            if _config_cache is None:
+                _config_cache = dict(DEFAULT_APP_CONFIG)
+            _config_mtime = None
+            return _config_cache
+
+        if _config_cache is not None and _config_mtime == mtime:
+            return _config_cache
+
+        try:
+            with open(APP_CONFIG_PATH, encoding='utf-8') as f:
+                merged = dict(DEFAULT_APP_CONFIG)
+                merged.update(json.load(f))
+                if 'features' in merged and isinstance(merged['features'], dict):
+                    feat = dict(DEFAULT_APP_CONFIG['features'])
+                    feat.update(merged['features'])
+                    merged['features'] = feat
+                _config_cache = merged
+                _config_mtime = mtime
+        except (json.JSONDecodeError, OSError):
+            if _config_cache is None:
+                _config_cache = dict(DEFAULT_APP_CONFIG)
+        return _config_cache
 
 # ─── Prometheus metrics (Lab 8) ──────────────────────────────────────────────
 # Keep label cardinality low: endpoint is the route path (this app has only a
@@ -187,14 +275,18 @@ def get_request_info():
 @app.route('/')
 def index():
     """Main endpoint - service and system information."""
+    cfg = load_app_config()
+    total_visits = increment_visit_count()
     uptime = get_uptime()
-    
+    env_label = os.getenv('APP_ENV') or cfg.get('environment', 'dev')
+
     response = {
         'service': {
-            'name': 'devops-info-service',
+            'name': cfg.get('appName', 'devops-info-service'),
             'version': '1.0.0',
             'description': 'DevOps course info service',
-            'framework': 'Flask'
+            'framework': 'Flask',
+            'environment': env_label,
         },
         'system': get_system_info(),
         'runtime': {
@@ -204,13 +296,32 @@ def index():
             'timezone': 'UTC'
         },
         'request': get_request_info(),
+        'visits': {
+            'total': total_visits,
+        },
         'endpoints': [
             {'path': '/', 'method': 'GET', 'description': 'Service information'},
-            {'path': '/health', 'method': 'GET', 'description': 'Health check'}
-        ]
+            {'path': '/visits', 'method': 'GET', 'description': 'Visit counter'},
+            {'path': '/health', 'method': 'GET', 'description': 'Health check'},
+        ],
     }
-    
+
     return jsonify(response)
+
+
+@app.route('/visits')
+def visits():
+    """Return current visit count (Lab 12 — file-backed counter)."""
+    cfg = load_app_config()
+    count = get_visit_count()
+    return jsonify({
+        'visits': count,
+        'config': {
+            'appName': cfg.get('appName', 'devops-info-service'),
+            'environment': os.getenv('APP_ENV') or cfg.get('environment', 'dev'),
+            'logLevel': os.getenv('LOG_LEVEL', 'info'),
+        },
+    })
 
 
 @app.route('/health')

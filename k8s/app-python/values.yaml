@@ -1,4 +1,5 @@
-replicaCount: 3
+# RWO PVC (Lab 12) supports only one replica per volume; scale out requires RWX or disabled persistence.
+replicaCount: 1
 
 image:
   repository: yourusername/app_python
@@ -36,6 +37,21 @@ readinessProbe:
 
 podAnnotations: {}
 podLabels: {}
+
+# Lab 12 — ConfigMaps (file + env) and optional checksum for rollout on change
+environment: dev
+logLevel: info
+
+configMap:
+  enabled: true
+
+configReload:
+  checksumAnnotation: true
+
+persistence:
+  enabled: true
+  size: 100Mi
+  storageClass: ""
 
 serviceAccount:
   create: true
