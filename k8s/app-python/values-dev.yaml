@@ -17,3 +17,6 @@ service:
 livenessProbe:
   initialDelaySeconds: 5
   periodSeconds: 10
+
+rollout:
+  strategy: canary

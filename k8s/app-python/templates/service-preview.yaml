@@ -1,0 +1,17 @@
+{{- if and .Values.service.enabled (eq .Values.rollout.strategy "blueGreen") .Values.rollout.blueGreen.previewService.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "app-python.fullname" . }}-{{ .Values.rollout.blueGreen.previewService.suffix }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "common.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: http
+      protocol: TCP
+      port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.targetPort }}
+{{- end }}
