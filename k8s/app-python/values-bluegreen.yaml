@@ -1,0 +1,10 @@
+rollout:
+  strategy: blueGreen
+  blueGreen:
+    autoPromotionEnabled: false
+    previewService:
+      enabled: true
+      suffix: preview
+
+analysis:
+  enabled: false

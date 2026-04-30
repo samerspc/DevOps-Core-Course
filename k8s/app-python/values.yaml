@@ -75,3 +75,45 @@ vault:
 nodeSelector: {}
 tolerations: []
 affinity: {}
+
+rollout:
+  enabled: true
+  strategy: canary
+  revisionHistoryLimit: 3
+  canary:
+    steps:
+      - setWeight: 20
+      - pause: {}
+      - analysis:
+          templates:
+            - templateName: success-rate
+      - setWeight: 40
+      - pause:
+          duration: 30s
+      - setWeight: 60
+      - pause:
+          duration: 30s
+      - setWeight: 80
+      - pause:
+          duration: 30s
+      - setWeight: 100
+  blueGreen:
+    autoPromotionEnabled: false
+    autoPromotionSeconds: null
+    previewService:
+      enabled: true
+      suffix: preview
+
+analysis:
+  enabled: true
+  templateName: success-rate
+  metrics:
+    - name: webcheck
+      interval: 10s
+      count: 3
+      failureLimit: 1
+      provider:
+        web:
+          path: /health
+          jsonPath: "{$.status}"
+      successCondition: result == "ok"

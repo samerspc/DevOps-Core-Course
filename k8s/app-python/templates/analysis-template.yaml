@@ -1,0 +1,21 @@
+{{- if and .Values.rollout.enabled .Values.analysis.enabled (eq .Values.rollout.strategy "canary") }}
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: {{ .Values.analysis.templateName }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+spec:
+  metrics:
+    {{- range .Values.analysis.metrics }}
+    - name: {{ .name }}
+      interval: {{ .interval }}
+      count: {{ .count }}
+      failureLimit: {{ .failureLimit }}
+      provider:
+        web:
+          url: http://{{ include "app-python.fullname" $ }}.{{ $.Release.Namespace }}.svc{{ .provider.web.path }}
+          jsonPath: {{ .provider.web.jsonPath | quote }}
+      successCondition: {{ .successCondition | quote }}
+    {{- end }}
+{{- end }}
