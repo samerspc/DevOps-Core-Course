@@ -1,0 +1,7 @@
+# Lab 15 bonus — partitioned rolling update example (combine with `-f values-lab15.yaml -f values-lab15-bonus-update.yaml`).
+# With partition: 2 and 3 replicas, ordinals 0–1 keep the old revision until you lower the partition.
+statefulset:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      partition: 2

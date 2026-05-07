@@ -1,0 +1,25 @@
+# Lab 15 — StatefulSet workload (cannot run alongside Argo Rollout for same selectors).
+rollout:
+  enabled: false
+
+analysis:
+  enabled: false
+
+statefulset:
+  enabled: true
+
+# Three replicas to show per-pod /visits and PVC isolation (RWO per pod).
+replicaCount: 3
+
+service:
+  type: ClusterIP
+
+# Image built locally and loaded into Kind (adjust if you publish to a registry).
+image:
+  repository: devops-course/app_python
+  tag: lab15
+  pullPolicy: IfNotPresent
+
+persistence:
+  enabled: true
+  size: 100Mi

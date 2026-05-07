@@ -7,6 +7,6 @@
   export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "app-python.fullname" . }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
   echo "Visit: http://$SERVICE_IP:{{ .Values.service.port }}"
 {{- else }}
-  echo "Run: kubectl port-forward svc/{{ include "app-python.fullname" . }} 8080:{{ .Values.service.targetPort }}"
+  echo "Run: kubectl port-forward svc/{{ include "app-python.fullname" . }} 8080:{{ .Values.service.port }}"
   echo "Visit: http://127.0.0.1:8080"
 {{- end }}
