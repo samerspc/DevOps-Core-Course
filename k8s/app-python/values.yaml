@@ -104,6 +104,16 @@ rollout:
       enabled: true
       suffix: preview
 
+# Lab 15 — StatefulSets (exclude Rollout workload: set rollout.enabled: false).
+statefulset:
+  enabled: false
+  podManagementPolicy: OrderedReady
+  # Bonus: partitioned rolling (only ordinals ≥ partition updated first) — see values-lab15-bonus-update.yaml.
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      partition: 0
+
 analysis:
   enabled: true
   templateName: success-rate
