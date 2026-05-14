@@ -1,0 +1,32 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  annotations:
+    meta.helm.sh/release-name: lab16
+    meta.helm.sh/release-namespace: default
+  creationTimestamp: "2026-05-14T18:21:52Z"
+  generation: 1
+  labels:
+    app.kubernetes.io/instance: lab16
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: app-python
+    app.kubernetes.io/version: 1.0.0
+    helm.sh/chart: app-python-0.1.0
+    release: monitoring
+  name: lab16-app-python
+  namespace: default
+  resourceVersion: "1579"
+  uid: d22d6a2b-ea0e-4d48-a404-e86a2f1cf74b
+spec:
+  endpoints:
+  - interval: 15s
+    path: /metrics
+    port: http
+    scrapeTimeout: 10s
+  namespaceSelector:
+    matchNames:
+    - default
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: lab16
+      app.kubernetes.io/name: app-python

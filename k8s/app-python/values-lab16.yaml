@@ -1,0 +1,40 @@
+# Lab 16 — StatefulSet + init containers + ServiceMonitor (kube-prometheus-stack release name: monitoring).
+rollout:
+  enabled: false
+
+analysis:
+  enabled: false
+
+statefulset:
+  enabled: true
+
+replicaCount: 1
+
+service:
+  type: ClusterIP
+
+persistence:
+  enabled: true
+  size: 100Mi
+
+image:
+  repository: devops-course/app_python
+  tag: lab16
+  pullPolicy: IfNotPresent
+
+lab16:
+  waitDependency:
+    enabled: true
+  initContainers:
+    enabled: true
+    waitForDependency: true
+    download:
+      enabled: true
+      url: "https://example.com"
+      outputFile: "index.html"
+  serviceMonitor:
+    enabled: true
+    interval: 15s
+    scrapeTimeout: 10s
+    labels:
+      release: monitoring

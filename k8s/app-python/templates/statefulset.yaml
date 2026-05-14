@@ -26,6 +26,36 @@ spec:
       {{- if .Values.serviceAccount.create }}
       serviceAccountName: {{ include "app-python.serviceAccountName" . }}
       {{- end }}
+      {{- $lab16Wait := and .Values.lab16.initContainers.enabled .Values.lab16.initContainers.waitForDependency .Values.lab16.waitDependency.enabled }}
+      {{- $lab16Dl := and .Values.lab16.initContainers.enabled .Values.lab16.initContainers.download.enabled }}
+      {{- if or $lab16Wait $lab16Dl }}
+      initContainers:
+        {{- if $lab16Wait }}
+        - name: wait-for-lab16-dep
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              url="http://{{ include "app-python.fullname" . }}-lab16-dep.{{ .Release.Namespace }}.svc.cluster.local/"
+              until wget -qO- "$url" >/dev/null 2>&1; do
+                echo "waiting for dependency HTTP..."
+                sleep 2
+              done
+              echo "dependency is reachable"
+        {{- end }}
+        {{- if $lab16Dl }}
+        - name: init-download
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - wget -q -O "/work-dir/{{ .Values.lab16.initContainers.download.outputFile }}" "{{ .Values.lab16.initContainers.download.url }}"
+          volumeMounts:
+            - name: init-workdir
+              mountPath: /work-dir
+        {{- end }}
+      {{- end }}
       containers:
         - name: {{ include "app-python.name" . }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
@@ -54,6 +84,11 @@ spec:
             {{- end }}
             - name: app-data
               mountPath: /data
+            {{- if .Values.lab16.initContainers.download.enabled }}
+            - name: init-workdir
+              mountPath: /data/init-download
+              readOnly: true
+            {{- end }}
           livenessProbe:
             {{- toYaml .Values.livenessProbe | nindent 12 }}
           readinessProbe:
@@ -68,6 +103,10 @@ spec:
         {{- end }}
         {{- if not .Values.persistence.enabled }}
         - name: app-data
+          emptyDir: {}
+        {{- end }}
+        {{- if .Values.lab16.initContainers.download.enabled }}
+        - name: init-workdir
           emptyDir: {}
         {{- end }}
       nodeSelector:
