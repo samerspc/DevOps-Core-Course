@@ -1,0 +1,20 @@
+# Lab 18 — local IPFS node (Kubo) for Task 1.
+# From this directory: docker compose up -d
+# Web UI: http://127.0.0.1:5001/webui  |  Gateway: http://127.0.0.1:8080
+# Stop any other stack already bound to 4001/5001/8080 (e.g. another IPFS or proxy).
+services:
+  ipfs:
+    image: ipfs/kubo:latest
+    container_name: ipfs-lab18
+    ports:
+      - "4001:4001" # swarm
+      - "8080:8080" # gateway
+      - "5001:5001" # API + web UI
+    volumes:
+      - ipfs_lab18_data:/data/ipfs
+      # Mount lab files read-only so you can `ipfs add` without docker cp
+      - .:/labwork:ro
+    restart: unless-stopped
+
+volumes:
+  ipfs_lab18_data:
