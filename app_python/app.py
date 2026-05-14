@@ -303,6 +303,8 @@ def index():
             {'path': '/', 'method': 'GET', 'description': 'Service information'},
             {'path': '/visits', 'method': 'GET', 'description': 'Visit counter'},
             {'path': '/health', 'method': 'GET', 'description': 'Health check'},
+            {'path': '/metrics', 'method': 'GET', 'description': 'Prometheus metrics'},
+            {'path': '/fly/secrets-status', 'method': 'GET', 'description': 'Fly secrets presence (names only)'},
         ],
     }
 
@@ -321,6 +323,18 @@ def visits():
             'environment': os.getenv('APP_ENV') or cfg.get('environment', 'dev'),
             'logLevel': os.getenv('LOG_LEVEL', 'info'),
         },
+    })
+
+
+@app.route('/fly/secrets-status')
+def fly_secrets_status():
+    """
+    Lab 17 — verify Fly secrets are injected as env vars without exposing values.
+    Set with: fly secrets set API_KEY=... DATABASE_URL=...
+    """
+    return jsonify({
+        'api_key_configured': bool(os.getenv('API_KEY')),
+        'database_url_configured': bool(os.getenv('DATABASE_URL')),
     })
 
 

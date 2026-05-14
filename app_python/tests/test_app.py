@@ -149,6 +149,22 @@ class TestRootEndpoint:
         assert "/health" in paths
 
 
+class TestFlySecretsStatus:
+    """Lab 17 — Fly secrets presence endpoint (no secret values exposed)."""
+
+    def test_returns_200(self, client):
+        response = client.get("/fly/secrets-status")
+        assert response.status_code == 200
+        assert response.content_type == "application/json"
+
+    def test_shape_without_env(self, client):
+        data = client.get("/fly/secrets-status").get_json()
+        assert data == {
+            "api_key_configured": False,
+            "database_url_configured": False,
+        }
+
+
 class TestVisitsEndpoint:
     """Tests for GET /visits and visit counter behaviour."""
 

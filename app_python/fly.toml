@@ -1,0 +1,38 @@
+# Fly.io — Lab 17 (Exam alternative)
+# Replace the app name with a globally unique name before `fly launch` / `fly deploy`:
+#   sed -i '' 's/^app = .*/app = "your-unique-name"/' fly.toml
+app = "devops-info-service-REPLACE_ME"
+
+primary_region = "ams"
+
+[build]
+  dockerfile = "Dockerfile"
+
+# Fly routes to internal_port; the Flask app reads PORT (see app.py / Dockerfile).
+[env]
+  PORT = "8080"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+[checks]
+  [checks.health]
+    type = "http"
+    port = 8080
+    path = "/health"
+    interval = "15s"
+    timeout = "3s"
+    grace_period = "45s"
+
+[[vm]]
+  memory = "256mb"
+  cpu_kind = "shared"
+  cpus = 1
+
+[mounts]
+  source = "app_data"
+  destination = "/data"
