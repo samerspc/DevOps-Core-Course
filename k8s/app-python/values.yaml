@@ -114,6 +114,24 @@ statefulset:
     rollingUpdate:
       partition: 0
 
+# Lab 16 — monitoring (ServiceMonitor) and init container patterns (see values-lab16.yaml).
+lab16:
+  waitDependency:
+    enabled: false
+  initContainers:
+    enabled: false
+    waitForDependency: false
+    download:
+      enabled: false
+      url: "https://example.com"
+      outputFile: "index.html"
+  serviceMonitor:
+    enabled: false
+    interval: 15s
+    scrapeTimeout: 10s
+    labels:
+      release: monitoring
+
 analysis:
   enabled: true
   templateName: success-rate

@@ -1,0 +1,23 @@
+{{- if and .Values.service.enabled .Values.lab16.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "app-python.fullname" . }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+    {{- range $k, $v := .Values.lab16.serviceMonitor.labels }}
+    {{ $k }}: {{ $v | quote }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "common.selectorLabels" . | nindent 6 }}
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: {{ .Values.lab16.serviceMonitor.interval }}
+      scrapeTimeout: {{ .Values.lab16.serviceMonitor.scrapeTimeout }}
+{{- end }}
